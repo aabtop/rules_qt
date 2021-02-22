@@ -1,5 +1,5 @@
 workspace(
-    name = "bazel_qt",
+    name = "com_github_aabtop_rules_qt",
 )
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
@@ -29,5 +29,5 @@ setup_qt()
 load("@os_specific_vulkan_sdk_rules//:current_os_repo.bzl", "setup_os_specific_vulkan_repos")
 setup_os_specific_vulkan_repos()
 
-load("@bazel_qt//:qt_repository_rules.bzl", "fetch_qt")
+load("@com_github_aabtop_rules_qt//:qt_repository_rules.bzl", "fetch_qt")
 fetch_qt(name="qt")
