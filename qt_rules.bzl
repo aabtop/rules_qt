@@ -12,7 +12,7 @@ def __qt_compile_ui_impl(ctx):
 _qt_compile_ui = rule(
     implementation = __qt_compile_ui_impl,
     attrs = {
-        "uic": attr.label(default = "@qt//:uic", allow_single_file = True, executable = True, cfg = "exec"),
+        "uic": attr.label(default = "@com_github_aabtop_rules_qt//:uic", allow_single_file = True, executable = True, cfg = "exec"),
         "ui_src": attr.label(mandatory = True, allow_single_file = True),
         "out": attr.output(mandatory = True),
     },
@@ -46,7 +46,7 @@ def __qt_compile_moc_impl(ctx):
 _qt_compile_moc = rule(
     implementation = __qt_compile_moc_impl,
     attrs = {
-        "moc": attr.label(default = "@qt//:moc", allow_single_file = True, executable = True, cfg = "exec"),
+        "moc": attr.label(default = "@com_github_aabtop_rules_qt//:moc", allow_single_file = True, executable = True, cfg = "exec"),
         "hdr_src": attr.label(mandatory = True, allow_single_file = True),
         "out": attr.output(mandatory = True),
         "package_name": attr.string(mandatory = True),
@@ -63,7 +63,7 @@ def qt_moc_src(name, hdr_src):
         package_name = native.package_name(),
     )
 
-def qt_cc_library(name, srcs, hdr, qt_dep, ui_src = None, deps = [], **kwargs):
+def qt_cc_library(name, srcs, hdr, ui_src = None, deps = [], **kwargs):
     moc_target_name = "{}_moc".format(name)
     qt_moc_src(moc_target_name, hdr)
 
@@ -75,7 +75,7 @@ def qt_cc_library(name, srcs, hdr, qt_dep, ui_src = None, deps = [], **kwargs):
         name = name,
         srcs = srcs + [":" + moc_target_name],
         hdrs = [hdr],
-        deps = [qt_dep + "_lib"] + deps + ([":" + uic_target_name] if ui_src else []),
+        deps = ["@com_github_aabtop_rules_qt//:qt_lib"] + deps + ([":" + uic_target_name] if ui_src else []),
         **kwargs
     )
 
@@ -108,19 +108,19 @@ _package_runtime_files = rule(
 )
 
 # When going through qt_cc_binary, we ensure
-def qt_cc_binary(name, srcs, qt_dep, deps):
+def qt_cc_binary(name, srcs, deps):
     runtime_files_name = name + "_runtime_files"
     _package_runtime_files(
         name = runtime_files_name,
-        runtime_files = qt_dep + "_data_files",
-        runtime_sibling_files = qt_dep + "_data_sibling_files",
-        runtime_qt_platforms_plugins_files = qt_dep + "_platforms_plugins",
+        runtime_files = "@com_github_aabtop_rules_qt//:qt_data_files",
+        runtime_sibling_files = "@com_github_aabtop_rules_qt//:qt_data_sibling_files",
+        runtime_qt_platforms_plugins_files = "@com_github_aabtop_rules_qt//:qt_platforms_plugins",
     )
 
     native.cc_binary(
         name = name,
         srcs = srcs,
-        deps = [qt_dep + "_lib"] + deps,
+        deps = ["@com_github_aabtop_rules_qt//:qt_lib"] + deps,
         data = [":" + runtime_files_name],
     )
 
@@ -181,7 +181,7 @@ _qt_resource = rule(
     attrs = {
         "prefix": attr.string(mandatory = True, default = "/"),
         "srcs": attr.label_list(mandatory = True, allow_files = True),
-        "rcc": attr.label(default = "@qt//:rcc", allow_single_file = True, executable = True, cfg = "exec"),
+        "rcc": attr.label(default = "@com_github_aabtop_rules_qt//:rcc", allow_single_file = True, executable = True, cfg = "exec"),
     },
 )
 

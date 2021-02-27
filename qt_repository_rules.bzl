@@ -62,12 +62,19 @@ def _fetch_qt_impl(repository_ctx):
         },
     )
 
+    repository_ctx.template("qt_rules.bzl", repository_ctx.attr._qt_rules_bzl)
+    repository_ctx.template("qt_build_defs.bzl", repository_ctx.attr._qt_build_defs_bzl)
+
+
 _fetch_qt = repository_rule(
     implementation = _fetch_qt_impl,
     attrs = {
-        "_build_script_windows": attr.label(default = "@com_github_aabtop_rules_qt//:build_windows.bat"),
-        "_build_script_linux": attr.label(default = "@com_github_aabtop_rules_qt//:build_linux.sh"),
-        "_build_template": attr.label(default = "@com_github_aabtop_rules_qt//:qt.BUILD"),
+        "_build_script_windows": attr.label(default = "@com_github_aabtop_repository_rules_qt//:build_windows.bat"),
+        "_build_script_linux": attr.label(default = "@com_github_aabtop_repository_rules_qt//:build_linux.sh"),
+        "_build_template": attr.label(default = "@com_github_aabtop_repository_rules_qt//:qt.BUILD"),
+        "_qt_rules_bzl": attr.label(default = "@com_github_aabtop_repository_rules_qt//:qt_rules.bzl"),
+        "_qt_build_defs_bzl": attr.label(default = "@com_github_aabtop_repository_rules_qt//:qt_build_defs.bzl"),
+
         # We need to depend on Vulkan, but we don't know whether we're
         # downloading Windows or Linux, so unfortunately we download them both
         # because it's hard to tell Bazel to switch on OS in this context.

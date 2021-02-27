@@ -1,4 +1,4 @@
-load("//:qt_rules.bzl", "qt_cc_library", "qt_cc_binary", "qt_resource")
+load("@com_github_aabtop_rules_qt//:qt_rules.bzl", "qt_cc_library", "qt_cc_binary", "qt_resource")
 
 qt_cc_binary(
   name = "sample",
@@ -8,7 +8,6 @@ qt_cc_binary(
   deps = [
     ":main_window",
   ],
-  qt_dep = "@qt//:qt",
 )
 
 qt_cc_library(
@@ -18,5 +17,4 @@ qt_cc_library(
   ],
   hdr = "main_window.h",
   ui_src = "main_window.ui",
-  qt_dep = "@qt//:qt",
 )
