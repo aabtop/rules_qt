@@ -30,4 +30,4 @@ load("@os_specific_vulkan_sdk_rules//:current_os_repo.bzl", "setup_os_specific_v
 setup_os_specific_vulkan_repos()
 
 load("@com_github_aabtop_repository_rules_qt//:qt_repository_rules.bzl", "fetch_qt")
-fetch_qt(name="com_github_aabtop_rules_qt")
+fetch_qt(name="aabtop_rules_qt")

@@ -42,8 +42,9 @@ RUN copy C:\Python27\python.exe C:\Python27\python2.exe
 RUN Invoke-WebRequest -UserAgent 'DockerCI' -outfile 7zsetup.exe http://www.7-zip.org/a/7z1604-x64.exe
 RUN Invoke-WebRequest -UserAgent 'DockerCI' -outfile msys2-x86_64-latest.tar.xz http://repo.msys2.org/distrib/msys2-x86_64-latest.tar.xz 
 RUN Start-Process .\7zsetup -ArgumentList '/S /D=c:/7zip' -Wait
-RUN C:\7zip\7z e msys2-x86_64-latest.tar.xz -Wait
-RUN C:\7zip\7z x msys2-x86_64-latest.tar -o"C:\\"
+RUN setx /M PATH $($Env:PATH + ';C:\7zip') 
+RUN 7z e msys2-x86_64-latest.tar.xz -Wait
+RUN 7z x msys2-x86_64-latest.tar -o"C:\\"
 RUN C:\msys64\usr\bin\bash.exe -l -c 'exit 0'; \
   C:\msys64\usr\bin\bash.exe -l -c 'echo "Now installing MSYS2..."'; \
   C:\msys64\usr\bin\bash.exe -l -c 'pacman -Syuu --needed --noconfirm --noprogressbar'; \

@@ -11,6 +11,6 @@ bazel --output_user_root=%BAZEL_OUT_DIR% build //sample -c %BUILD_CONFIG% --syml
 IF %ERRORLEVEL% NEQ 0 EXIT 1
 
 for /f "usebackq tokens=*" %%a in (`bazel --output_user_root=%BAZEL_OUT_DIR% info execution_root -c %BUILD_CONFIG%`) do (
-  7z a %OUT_DIR%/qt_windows.zip %%a\external\com_github_aabtop_rules_qt\* -r
+  7z a %OUT_DIR%/qt_windows.zip %%a\external\aabtop_rules_qt\* -r
   IF %ERRORLEVEL% NEQ 0 EXIT 1
 )

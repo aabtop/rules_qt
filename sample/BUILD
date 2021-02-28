@@ -1,4 +1,4 @@
-load("@com_github_aabtop_rules_qt//:qt_rules.bzl", "qt_cc_library", "qt_cc_binary", "qt_resource")
+load("@aabtop_rules_qt//:qt_rules.bzl", "qt_cc_library", "qt_cc_binary", "qt_resource")
 
 qt_cc_binary(
   name = "sample",
