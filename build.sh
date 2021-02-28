@@ -30,15 +30,16 @@ fi
 
 # Make sure the Docker container image containing the build environment is
 # up to date and then run the actual build command inside the container.
-docker build -t reify-build-env ${DOCKERFILE_DIRECTORY}
+docker build -t aabtop_rules_qt-build-env ${DOCKERFILE_DIRECTORY}
 
 echo "Entering container..."
 
 docker run \
     --rm \
-    --name reify-build-env-instance \
+    -t \
+    --name aabtop_rules_qt-build-env-instance \
     --mount type=bind,source=${HOST_SRC_DIR},target=/src \
     --mount type=bind,source=${HOST_OUT_DIR},target=/out \
-    --mount type=volume,source=reify-bazel-cache-linux,target=/root/.cache/bazel \
-    reify-build-env \
-    ${RUN_COMMAND}
+    --mount type=volume,source=aabtop_rules_qt-bazel-cache-linux,target=/root/.cache/bazel \
+    aabtop_rules_qt-build-env \
+    ${RUN_COMMAND} /out
