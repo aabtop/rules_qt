@@ -18,7 +18,7 @@ def rules_qt_deps2(local_build="prebuilt"):
 
   native.local_repository(
       name="aabtop_qt_bin_linux",
-      path="/mnt/c/Users/Andrew/foo/aabtop_rules_qt"
+      path="/mnt/c/Users/Andrew/foo/aabtop_qt_build"
   )
 
   qt_bin(
