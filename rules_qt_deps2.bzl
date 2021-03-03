@@ -11,16 +11,6 @@ def rules_qt_deps2(local_build="prebuilt"):
 
   fetch_and_build_qt(name="aabtop_qt_build")
 
-  native.local_repository(
-      name="aabtop_qt_bin_windows",
-      path="C:/Users/Andrew/foo/qt_windows_bin",
-  )
-
-  native.local_repository(
-      name="aabtop_qt_bin_linux",
-      path="/mnt/c/Users/Andrew/foo/aabtop_qt_build"
-  )
-
   qt_bin(
       name="aabtop_qt_bin",
       local_build=local_build,

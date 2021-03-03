@@ -18,3 +18,16 @@ def rules_qt_deps1():
       commit = "ebfb9377f616cf12ffe0a9e1088ca0c005bd2db4",
       shallow_since = "1611480038 +0000",
   )
+
+  http_archive(
+      name="aabtop_qt_bin_linux",
+      strip_prefix = "aabtop_qt_build",
+      url = "https://github.com/aabtop/rules_qt/releases/download/v0.0.1/qt_linux.tar.gz",
+      sha256 = "0b642145a6d991beb7a4e649aa691e07e4a70d8e83704def442a105930349c80",
+  )
+
+  http_archive(
+      name="aabtop_qt_bin_windows",
+      url = "https://github.com/aabtop/rules_qt/releases/download/v0.0.1/qt_windows.zip",
+      sha256 = "f153140e57b2a68db0aeb09d14a3087a942eb8ed2cf5ebd0126b30ace2b0a3e0",
+  )
