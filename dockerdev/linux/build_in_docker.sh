@@ -14,6 +14,6 @@ cd ${SRC_DIR}
 
 bazel build //sample -c ${BUILD_CONFIG} --symlink_prefix=/bazel- --verbose_failures
 
-tar -zch -f ${OUT_DIR}/qt_linux.tar.gz -C "$(bazel info execution_root -c ${BUILD_CONFIG})/external" aabtop_rules_qt
+tar -zch -f ${OUT_DIR}/qt_linux.tar.gz -C "$(bazel info execution_root -c ${BUILD_CONFIG})/external" aabtop_qt_build
 
 echo Success!

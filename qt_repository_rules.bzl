@@ -1,4 +1,28 @@
-def _fetch_qt_impl(repository_ctx):
+QT_COMPONENTS = [
+    "Bodymovin",
+    "Core",
+    "DBus",
+    "Gui",
+    "Network",
+    "OpenGL",
+    "Pdf",
+    "PrintSupport",
+    "Qml",
+    "QmlModels",
+    "QmlWorkerScript",
+    "Quick",
+    "QuickShapes",
+    "QuickWidgets",
+    "Sql",
+    "WebChannel",
+    "WebEngine",
+    "WebEngineCore",
+    "WebEngineWidgets",
+    "WebSockets",
+    "Widgets",
+]
+
+def _fetch_and_build_qt_impl(repository_ctx):
     tmp_dir = "tmp"
     src_dir = tmp_dir + "/src"
     build_dir = tmp_dir + "/build"
@@ -52,28 +76,29 @@ def _fetch_qt_impl(repository_ctx):
     if not result:
         fail("Error deleting scratch folder.")
 
-    repository_ctx.report_progress("Creating Qt BUILD file...")
+    repository_ctx.report_progress("Creating Qt BUILD files...")
+    repository_ctx.file("WORKSPACE", content = "")
+    repository_ctx.file("BUILD", content = """
+load("//:components.bzl", "QT_COMPONENTS")
 
-    repository_ctx.template(
-        "BUILD",
-        repository_ctx.attr._build_template,
-        substitutions = {
-            "{src_dir}": src_dir,
-        },
-    )
+exports_files(glob(["**"]))
 
-    repository_ctx.template("qt_rules.bzl", repository_ctx.attr._qt_rules_bzl)
-    repository_ctx.template("qt_build_defs.bzl", repository_ctx.attr._qt_build_defs_bzl)
+cc_library(
+    name = "header_files",
+    hdrs = glob(["include/**"]),
+    includes = ["include"] + ["include/Qt{}".format(x) for x in QT_COMPONENTS],
+    visibility = ["//visibility:public"],
+)
+    """)
+    repository_ctx.file("components.bzl", content = "QT_COMPONENTS = [{}]".format(
+        ",\n".join(['"{}"'.format(x) for x in QT_COMPONENTS])))
 
 
-_fetch_qt = repository_rule(
-    implementation = _fetch_qt_impl,
+fetch_and_build_qt = repository_rule(
+    implementation = _fetch_and_build_qt_impl,
     attrs = {
-        "_build_script_windows": attr.label(default = "@com_github_aabtop_repository_rules_qt//:build_windows.bat"),
-        "_build_script_linux": attr.label(default = "@com_github_aabtop_repository_rules_qt//:build_linux.sh"),
-        "_build_template": attr.label(default = "@com_github_aabtop_repository_rules_qt//:qt.BUILD"),
-        "_qt_rules_bzl": attr.label(default = "@com_github_aabtop_repository_rules_qt//:qt_rules.bzl"),
-        "_qt_build_defs_bzl": attr.label(default = "@com_github_aabtop_repository_rules_qt//:qt_build_defs.bzl"),
+        "_build_script_windows": attr.label(default = "@aabtop_rules_qt//:build_windows.bat"),
+        "_build_script_linux": attr.label(default = "@aabtop_rules_qt//:build_linux.sh"),
 
         # We need to depend on Vulkan, but we don't know whether we're
         # downloading Windows or Linux, so unfortunately we download them both
@@ -114,8 +139,35 @@ _os_specific_vulkan_sdk = repository_rule(
     implementation = __os_specific_vulkan_sdk_impl,
 )
 
-def setup_qt():
+def setup_qt_dependencies():
     _os_specific_vulkan_sdk(name = "os_specific_vulkan_sdk_rules")
 
-def fetch_qt(name):
-    _fetch_qt(name = name)
+
+def _qt_bin_impl(repository_ctx):
+    if repository_ctx.attr.local_build == "local":
+        qt_bin_repo = "@aabtop_qt_build"
+    else:
+        if "windows" in repository_ctx.os.name:
+            qt_bin_repo = "@aabtop_qt_bin_windows"
+        else:
+            qt_bin_repo = "@aabtop_qt_bin_linux"
+
+    repository_ctx.template(
+        "qt_bin_build.bzl", repository_ctx.attr._qt_bin_build_bzl,
+        substitutions = {
+            "{QT_BIN_REPO}": qt_bin_repo,
+        })
+
+    repository_ctx.file("BUILD", """
+load("//:qt_bin_build.bzl", "qt_bin_build")
+qt_bin_build()
+    """)
+
+qt_bin = repository_rule(
+    implementation = _qt_bin_impl,
+    attrs = {
+        "local_build": attr.string(default = "prebuilt", values = ["local", "prebuilt"]),
+
+        "_qt_bin_build_bzl": attr.label(default = "@aabtop_rules_qt//:qt_bin_build.bzl"),
+    },
+)
