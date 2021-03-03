@@ -9,9 +9,9 @@ To use it, add:
 ```python
 http_archive(
     name = "aabtop_rules_qt",
-    strip_prefix = "rules_qt-????",
-    url = "https://github.com/aabtop/rules_qt/archive/?????.zip",
-    sha256 = "?????",
+    strip_prefix = "rules_qt-541d66b500f3436c2fc27781ce3cfd79b402abfc",
+    url = "https://github.com/aabtop/rules_qt/archive/541d66b500f3436c2fc27781ce3cfd79b402abfc.zip",
+    sha256 = "bf4653a64812dd19f729f72c3c1945a63d0afda5dcec414f84018004f365e605",
 )
 
 
