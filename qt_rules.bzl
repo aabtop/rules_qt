@@ -96,6 +96,15 @@ def __package_runtime_files_impl(ctx):
         ctx.actions.symlink(output = new_local_file, target_file = x)
         local_files.append(new_local_file)
 
+    # For some reason, on Linux (but not Windows), this needs to be explicitly
+    # specified.
+    qt_conf_file = ctx.actions.declare_file("qt.conf")
+    local_files.append(qt_conf_file)
+    ctx.actions.write(output=qt_conf_file, content="""
+    [Paths]
+    Data = .
+    """)
+
     return [DefaultInfo(runfiles = ctx.runfiles(files = local_files))]
 
 _package_runtime_files = rule(

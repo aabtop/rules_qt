@@ -76,7 +76,7 @@ def qt_bin_build():
         name = "qt_data_sibling_files",
         srcs = select({
             "@bazel_tools//src/conditions:windows": in_bin_repo(["bin/QtWebEngineProcess.exe"]),
-            "//conditions:default": in_bin_repo([]),
+            "//conditions:default": in_bin_repo(["libexec/QtWebEngineProcess"]),
         }),
         visibility = ["//visibility:public"],
     )
