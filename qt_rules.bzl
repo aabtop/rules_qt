@@ -101,6 +101,21 @@ def __package_runtime_files_impl(ctx):
         ctx.actions.symlink(output = new_local_file, target_file = x)
         local_files.append(new_local_file)
 
+    for x in ctx.files.runtime_qt_sibling_files:
+        new_local_file = ctx.actions.declare_file(x.basename)
+        ctx.actions.symlink(output = new_local_file, target_file = x)
+        local_files.append(new_local_file)
+
+
+    # For some reason, on Linux (but not Windows), this needs to be explicitly
+    # specified.
+    qt_conf_file = ctx.actions.declare_file("qt.conf")
+    local_files.append(qt_conf_file)
+    ctx.actions.write(output=qt_conf_file, content="""
+[Paths]
+Prefix = qt
+    """)
+
     return [DefaultInfo(runfiles = ctx.runfiles(files = local_files))]
 
 _package_runtime_files = rule(
@@ -110,6 +125,7 @@ _package_runtime_files = rule(
         "runtime_qt_libexec_files": attr.label_list(mandatory = True),
         "runtime_qt_plugins_platforms_files": attr.label_list(mandatory = True),
         "runtime_qt_lib_files": attr.label_list(mandatory = True),
+        "runtime_qt_sibling_files": attr.label_list(mandatory = True),
     },
 )
 
@@ -119,9 +135,22 @@ def qt_cc_binary(name, srcs, deps):
     _package_runtime_files(
         name = runtime_files_name,
         runtime_files = ["@aabtop_qt_bin//:qt_data_files"],
-        runtime_qt_libexec_files = ["@aabtop_qt_bin//:qt_libexec_files"],
         runtime_qt_plugins_platforms_files = ["@aabtop_qt_bin//:qt_plugins_platforms_files"],
-        runtime_qt_lib_files = ["@aabtop_qt_bin//:qt_lib_files"],
+        runtime_qt_libexec_files = select({
+            "@bazel_tools//src/conditions:windows": [],
+            "//conditions:default": ["@aabtop_qt_bin//:qt_libexec_files"],
+        }),
+        runtime_qt_lib_files = select({
+            "@bazel_tools//src/conditions:windows": [],
+            "//conditions:default": ["@aabtop_qt_bin//:qt_lib_files"],
+        }),
+        runtime_qt_sibling_files = select({
+            # Windows really wants to have the DLLs live next to the executable.
+            "@bazel_tools//src/conditions:windows": [
+                "@aabtop_qt_bin//:qt_lib_files",
+                "@aabtop_qt_bin//:qt_libexec_files"],
+            "//conditions:default": [],
+        }),
     )
 
     native.cc_binary(
