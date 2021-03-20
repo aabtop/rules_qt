@@ -22,9 +22,10 @@ def qt_bin_build():
     ] + qt_modules
     linux_qt_modules = ["Qt5XcbQpa"] + qt_modules
 
-    win_lib_filepaths = (
+    win_static_library_filepaths = (
         ["lib/{}.lib".format(x) for x in win_qt_modules]
     )
+    win_lib_filepaths = ["bin/{}.dll".format(x) for x in win_qt_modules]
 
     linux_lib_filepaths = (
         [linux_shared_lib_filename_for_module(x) for x in linux_qt_modules]
@@ -43,9 +44,6 @@ def qt_bin_build():
         )
 
     include_directories = ["include"] + ["include/Qt{}".format(x) for x in QT_COMPONENTS]
-
-    win_shared_library_filepaths = ["bin/{}.dll".format(x) for x in win_qt_modules]
-    linux_shared_library_filepaths = ["lib/lib{}.so".format(x) for x in linux_qt_modules]
 
     resources = [
         "resources/icudtl.dat",
@@ -101,7 +99,7 @@ def qt_bin_build():
     native.filegroup(
         name = "qt_lib_files",
         srcs = select({
-            "@bazel_tools//src/conditions:windows": in_bin_repo(win_shared_library_filepaths),
+            "@bazel_tools//src/conditions:windows": in_bin_repo(win_lib_filepaths),
             "//conditions:default": in_bin_repo(linux_lib_filepaths),
         }),
         visibility = ["//visibility:public"],
@@ -109,13 +107,16 @@ def qt_bin_build():
 
     native.cc_library(
         name = "qt_lib",
-        srcs = [],
+        srcs = select({
+            "@bazel_tools//src/conditions:windows": in_bin_repo(win_static_library_filepaths),
+            "//conditions:default": [],
+        }),
         visibility = ["//visibility:public"],
         deps = [
             "@vulkan_sdk//:vulkan",
             with_bin_repo_prefix("header_files"),
         ] + select({
-            "@bazel_tools//src/conditions:windows": in_bin_repo(win_lib_filepaths),
+            "@bazel_tools//src/conditions:windows": [],
             "//conditions:default": [":{}".format(linux_interface_lib_target_for_module(x)) for x in linux_qt_modules],
         }),
     )
