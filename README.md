@@ -9,11 +9,10 @@ To use it, add:
 ```python
 http_archive(
     name = "aabtop_rules_qt",
-    strip_prefix = "rules_qt-541d66b500f3436c2fc27781ce3cfd79b402abfc",
-    url = "https://github.com/aabtop/rules_qt/archive/541d66b500f3436c2fc27781ce3cfd79b402abfc.zip",
-    sha256 = "bf4653a64812dd19f729f72c3c1945a63d0afda5dcec414f84018004f365e605",
+    strip_prefix = "rules_qt-f64ef32ce3b0735d00d5f59367326f93ea9b4a82",
+    url = "https://github.com/aabtop/rules_qt/archive/f64ef32ce3b0735d00d5f59367326f93ea9b4a82.zip",
+    sha256 = "ae5e97291701f5e5a340809aea2e048756673bf043596b9a61d24bec09b9ae13",
 )
-
 
 load("@aabtop_rules_qt//:rules_qt_deps1.bzl", "rules_qt_deps1")
 rules_qt_deps1()
