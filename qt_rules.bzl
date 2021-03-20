@@ -82,28 +82,24 @@ def qt_cc_library(name, srcs, hdr, ui_src = None, deps = [], **kwargs):
 def __package_runtime_files_impl(ctx):
     local_files = []
     for x in ctx.files.runtime_files:
-        new_local_file = ctx.actions.declare_file(x.path.replace(x.owner.workspace_root + "/", ""))
+        new_local_file = ctx.actions.declare_file(x.path.replace(x.owner.workspace_root + "/", "qt/"))
         ctx.actions.symlink(output = new_local_file, target_file = x)
         local_files.append(new_local_file)
 
-    for x in ctx.files.runtime_sibling_files:
-        new_local_file = ctx.actions.declare_file(x.basename)
+    for x in ctx.files.runtime_qt_libexec_files:
+        new_local_file = ctx.actions.declare_file("qt/libexec/" + x.basename)
         ctx.actions.symlink(output = new_local_file, target_file = x)
         local_files.append(new_local_file)
 
-    for x in ctx.files.runtime_qt_platforms_plugins_files:
-        new_local_file = ctx.actions.declare_file("platforms/" + x.basename)
+    for x in ctx.files.runtime_qt_plugins_platforms_files:
+        new_local_file = ctx.actions.declare_file("qt/plugins/platforms/" + x.basename)
         ctx.actions.symlink(output = new_local_file, target_file = x)
         local_files.append(new_local_file)
 
-    # For some reason, on Linux (but not Windows), this needs to be explicitly
-    # specified.
-    qt_conf_file = ctx.actions.declare_file("qt.conf")
-    local_files.append(qt_conf_file)
-    ctx.actions.write(output=qt_conf_file, content="""
-    [Paths]
-    Data = .
-    """)
+    for x in ctx.files.runtime_qt_lib_files:
+        new_local_file = ctx.actions.declare_file("qt/lib/" + x.basename)
+        ctx.actions.symlink(output = new_local_file, target_file = x)
+        local_files.append(new_local_file)
 
     return [DefaultInfo(runfiles = ctx.runfiles(files = local_files))]
 
@@ -111,8 +107,9 @@ _package_runtime_files = rule(
     implementation = __package_runtime_files_impl,
     attrs = {
         "runtime_files": attr.label_list(mandatory = True),
-        "runtime_sibling_files": attr.label_list(mandatory = True),
-        "runtime_qt_platforms_plugins_files": attr.label_list(mandatory = True),
+        "runtime_qt_libexec_files": attr.label_list(mandatory = True),
+        "runtime_qt_plugins_platforms_files": attr.label_list(mandatory = True),
+        "runtime_qt_lib_files": attr.label_list(mandatory = True),
     },
 )
 
@@ -122,8 +119,9 @@ def qt_cc_binary(name, srcs, deps):
     _package_runtime_files(
         name = runtime_files_name,
         runtime_files = ["@aabtop_qt_bin//:qt_data_files"],
-        runtime_sibling_files = ["@aabtop_qt_bin//:qt_data_sibling_files"],
-        runtime_qt_platforms_plugins_files = ["@aabtop_qt_bin//:qt_platforms_plugins"],
+        runtime_qt_libexec_files = ["@aabtop_qt_bin//:qt_libexec_files"],
+        runtime_qt_plugins_platforms_files = ["@aabtop_qt_bin//:qt_plugins_platforms_files"],
+        runtime_qt_lib_files = ["@aabtop_qt_bin//:qt_lib_files"],
     )
 
     native.cc_binary(
@@ -131,6 +129,10 @@ def qt_cc_binary(name, srcs, deps):
         srcs = srcs,
         deps = ["@aabtop_qt_bin//:qt_lib"] + deps,
         data = [":" + runtime_files_name],
+        linkopts = select({
+            "@bazel_tools//src/conditions:windows": [],
+            "//conditions:default": ["-Wl,-rpath='$$ORIGIN/qt/lib'",],
+        }),
     )
 
 def __qt_resource_impl(ctx):

@@ -4,13 +4,17 @@ load("{QT_BIN_REPO}//:components.bzl", "QT_COMPONENTS")
 def with_bin_repo_prefix(x):
     return "{QT_BIN_REPO}//:" + x
 
-
 def in_bin_repo(l):
     return [with_bin_repo_prefix(x) for x in l]
 
+def linux_interface_lib_filename_for_module(x):
+    return "lib/{}".format(linux_interface_lib_target_for_module(x))
+def linux_shared_lib_filename_for_module(x):
+    return "lib/{}.5".format(linux_interface_lib_target_for_module(x))
+def linux_interface_lib_target_for_module(x):
+    return "lib{}.so".format(x)
 
 def qt_bin_build():
-
     qt_modules = ["Qt5{}".format(x) for x in QT_COMPONENTS]
     win_qt_modules = [
         "libEGL",
@@ -21,9 +25,22 @@ def qt_bin_build():
     win_lib_filepaths = (
         ["lib/{}.lib".format(x) for x in win_qt_modules]
     )
+
     linux_lib_filepaths = (
-        ["lib/lib{}.so.5".format(x) for x in linux_qt_modules]
+        [linux_shared_lib_filename_for_module(x) for x in linux_qt_modules]
     )
+
+    for x in linux_qt_modules:
+        native.cc_import(
+            name = linux_interface_lib_target_for_module(x),
+            # We need to refer to the `.so` file, not the `.so.VERSION` file,
+            # because otherwise Bazel will complain.
+            interface_library = with_bin_repo_prefix(linux_interface_lib_filename_for_module(x)),
+            # By setting system_provided = 1, it tells Bazel not to manage this
+            # library at runtime. This lets us manually position the file in
+            # the Qt-expected lib/ directory.
+            system_provided = 1,
+        )
 
     include_directories = ["include"] + ["include/Qt{}".format(x) for x in QT_COMPONENTS]
 
@@ -38,10 +55,10 @@ def qt_bin_build():
         "resources/qtwebengine_resources_200p.pak",
     ]
 
-    win_platforms_plugins = [
+    win_plugings_platforms_files = [
         "plugins/platforms/qwindows.dll",
     ]
-    linux_platforms_plugins = [
+    linux_plugins_platforms_files = [
         #"plugins/platforms/libqeglfs.so",
         "plugins/platforms/libqxcb.so",
         #"plugins/platforms/libqlinuxfb.so",
@@ -64,16 +81,16 @@ def qt_bin_build():
     )
 
     native.filegroup(
-        name = "qt_platforms_plugins",
+        name = "qt_plugins_platforms_files",
         srcs = select({
-            "@bazel_tools//src/conditions:windows": in_bin_repo(win_platforms_plugins),
-            "//conditions:default": in_bin_repo(linux_platforms_plugins),
+            "@bazel_tools//src/conditions:windows": in_bin_repo(win_plugings_platforms_files),
+            "//conditions:default": in_bin_repo(linux_plugins_platforms_files),
         }),
         visibility = ["//visibility:public"],
     )
 
     native.filegroup(
-        name = "qt_data_sibling_files",
+        name = "qt_libexec_files",
         srcs = select({
             "@bazel_tools//src/conditions:windows": in_bin_repo(["bin/QtWebEngineProcess.exe"]),
             "//conditions:default": in_bin_repo(["libexec/QtWebEngineProcess"]),
@@ -81,17 +98,26 @@ def qt_bin_build():
         visibility = ["//visibility:public"],
     )
 
-    native.cc_library(
-        name = "qt_lib",
+    native.filegroup(
+        name = "qt_lib_files",
         srcs = select({
-            "@bazel_tools//src/conditions:windows": in_bin_repo(win_lib_filepaths + win_shared_library_filepaths),
+            "@bazel_tools//src/conditions:windows": in_bin_repo(win_shared_library_filepaths),
             "//conditions:default": in_bin_repo(linux_lib_filepaths),
         }),
+        visibility = ["//visibility:public"],
+    )
+
+    native.cc_library(
+        name = "qt_lib",
+        srcs = [],
         visibility = ["//visibility:public"],
         deps = [
             "@vulkan_sdk//:vulkan",
             with_bin_repo_prefix("header_files"),
-        ],
+        ] + select({
+            "@bazel_tools//src/conditions:windows": in_bin_repo(win_lib_filepaths),
+            "//conditions:default": [":{}".format(linux_interface_lib_target_for_module(x)) for x in linux_qt_modules],
+        }),
     )
 
     native.alias(
