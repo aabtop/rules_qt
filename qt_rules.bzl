@@ -37,7 +37,7 @@ def __qt_compile_moc_impl(ctx):
         outputs = [ctx.outputs.out],
         inputs = ctx.files.hdr_src,
         tools = [ctx.executable.moc],
-        arguments = [ctx.files.hdr_src[0].path, "-o", ctx.outputs.out.path, "-f\"{}\"".format(ctx.files.hdr_src[0].path)],
+        arguments = [ctx.files.hdr_src[0].path, "-o", ctx.outputs.out.path, "-f\"{}\"".format(ctx.files.hdr_src[0].short_path)],
         executable = ctx.executable.moc,
     )
 
@@ -187,10 +187,17 @@ def __qt_resource_impl(ctx):
         if not workspace_relative_path.startswith(package_dir):
             fail("Resources must be relative to package. Resource: '{}', Package directory: '{}'.".format(workspace_relative_path, package_dir))
 
-        workspace_relative_paths.append(workspace_relative_path)
+        filepath_relative_to_package_dir = workspace_relative_path[len(package_dir):]
+
+        # If this is an external repository, clean up the external part.
+        external_prefix = "external/"
+        if workspace_relative_path.startswith(external_prefix):
+            workspace_relative_path = workspace_relative_path[workspace_relative_path.find("/", len(external_prefix)) + 1:]
+
+        workspace_relative_paths.append((workspace_relative_path, filepath_relative_to_package_dir))
 
     file_list = "\n".join([
-        '<file alias="{}">{}</file>'.format(x, x[len(package_dir):]) for x in workspace_relative_paths])
+        '<file alias="{}">{}</file>'.format(x, y) for (x,y) in workspace_relative_paths])
 
     qrc_content = """
         <RCC>
