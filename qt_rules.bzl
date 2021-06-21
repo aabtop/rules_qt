@@ -184,6 +184,9 @@ def __qt_resource_impl(ctx):
             ctx.actions.symlink(output = out_path, target_file = x)
             linked_assets.append(out_path)
 
+        if workspace_relative_path.startswith('external/') and not package_dir.startswith('external/'):
+            package_dir = 'external/' + package_dir
+
         if not workspace_relative_path.startswith(package_dir):
             fail("Resources must be relative to package. Resource: '{}', Package directory: '{}'.".format(workspace_relative_path, package_dir))
 
